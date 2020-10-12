@@ -1,5 +1,7 @@
 package xyz.oribuin.eternalreports.command
 
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import org.bukkit.Bukkit
 import org.bukkit.Sound
 import org.bukkit.command.CommandSender
@@ -12,8 +14,14 @@ import xyz.oribuin.eternalreports.manager.ConfigManager
 import xyz.oribuin.eternalreports.manager.DataManager
 import xyz.oribuin.eternalreports.manager.MessageManager
 import xyz.oribuin.eternalreports.manager.ReportManager
+import xyz.oribuin.eternalreports.util.HexUtils.colorify
 import xyz.oribuin.eternalreports.util.PluginUtils
 import xyz.oribuin.eternalreports.util.StringPlaceholders
+import java.awt.Color
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+import java.nio.charset.StandardCharsets
 import java.util.*
 
 class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "report") {
@@ -103,6 +111,10 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
         reported.player?.let { reported.player?.let { dataManager.getReportsMade(it).plus(1) }?.let { it1 -> dataManager.updateReportsAgainst(it, it1) } }
 
         Bukkit.getPluginManager().callEvent(PlayerReportEvent(report))
+
+        if (ConfigManager.Setting.USE_WEBHOOK.boolean) {
+            this.createReport(sender, report)
+        }
     }
 
     override fun tabComplete(sender: CommandSender, args: Array<String>): MutableList<String>? {
@@ -123,6 +135,49 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
             return null
         }
         return suggestions
+    }
+
+    private fun createReport(player: Player, report: Report) {
+        try {
+
+            val embedColor: Color = try {
+                Color.decode("#FF0000")
+            } catch (ex: NumberFormatException) {
+                Color.WHITE
+            }
+            val embedColorRgb = embedColor.rgb and 0xFFFFFF // Strips alpha channel from the Color#decode
+
+            val json = JsonObject()
+            val embedJson = JsonObject()
+            embedJson.addProperty("title", "Ori's Report Module")
+            embedJson.addProperty("description", ("Welcome to Ori's report module, A player has submitted a report ingame, find information about the report here." +
+                    "\n" +
+                    "\nReport module forked from [EternalReports](https://github.com/Oribuin/EternalReports)"))
+            embedJson.addProperty("color", embedColorRgb)
+
+            val embedArray = JsonArray()
+            embedArray.add(embedJson)
+            json.add("embeds", embedArray)
+
+            val url = URL("https://discordapp.com/api/webhooks/765321095372734484/grFq_QcGOVG4jdNjjRABC7Q-cjVUYB2j52B8DGSIoDiBNafsY1K18SRtXa4gZftW90P2")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("User-Agent", "Lil' Ori Test")
+            connection.doOutput = true
+
+            connection.outputStream.use { out ->
+                out.write(json.toString().toByteArray(StandardCharsets.UTF_8))
+                out.flush()
+            }
+
+            connection.inputStream.close()
+            connection.disconnect()
+        } catch (ex: IOException) {
+            player.sendMessage(colorify("#B00B1EInvalid URL."))
+            ex.printStackTrace()
+        }
     }
 
     override fun addSubCommands() {

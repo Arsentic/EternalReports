@@ -23,6 +23,8 @@ class ConfigManager(plugin: EternalReports) : Manager(plugin) {
     enum class Setting(val key: String, val defaultValue: Any) {
         TIME("date-time-format", "HH:mm dd/m/yyyy"),
         COOLDOWN("cooldown", 10.0),
+        USE_WEBHOOK("use-webhook", true),
+        WEBHOOK_URL("webhook-url", "Insert-URL"),
         ALERT_SETTINGS_SOUND_ENABLED("alert-settings.sound.enabled", true),
         ALERT_SETTINGS_SOUND("alert-settings.sound.sound", "ENTITY_ARROW_HIT_PLAYER"),
         ALERT_SETTINGS_SOUND_VOLUME("alert-settings.sound.volume", 50),

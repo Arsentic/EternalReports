@@ -38,6 +38,7 @@ dependencies {
 
     implementation 'dev.rosewood:guiframework:1.1.1'
     implementation 'com.zaxxer:HikariCP:3.4.5'
+    implementation 'com.jcraft:jsch:0.1.55'
 }
 
 processResources {
@@ -56,7 +57,7 @@ compileKotlin {
 // Temporary replacement for PDM
 shadowJar {
     mergeServiceFiles()
-    archiveFileName = 'EternalReports-' + project.property("version") + '.jar'
+    archiveFileName = 'ArsenticReports-' + project.property("version") + '.jar'
 
     // Relocate so much shit
     relocate ('org.jetbrains', 'xyz.oribuin.eternalreports.libs.jetbrains')
