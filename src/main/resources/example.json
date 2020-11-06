@@ -1,0 +1,12 @@
+{
+  "content": " ",
+  "embed": {
+    "title": "Arsentic's Report Module",
+    "description": "Welcome to Ori's report module, A player has submitted a report ingame, find information about the report here.\n\nReport module forked from [EternalReports](https://github.com/Oribuin/EternalReports)",
+    "color": 11537182,
+
+    "fields": [
+
+    ]
+  }
+}

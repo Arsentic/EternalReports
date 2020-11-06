@@ -7,9 +7,20 @@ import xyz.oribuin.eternalreports.EternalReports
 import xyz.oribuin.eternalreports.command.subcommand.*
 import xyz.oribuin.eternalreports.manager.MessageManager
 import xyz.oribuin.eternalreports.manager.ReportManager
+import xyz.oribuin.eternalreports.menu.ReportsMenu
 import xyz.oribuin.eternalreports.util.HexUtils
 
 class CmdReports(override val plugin: EternalReports) : OriCommand(plugin, "reports") {
+
+    companion object {
+        var instance: CmdReports? = null
+            private set
+    }
+
+    init {
+        instance = this
+    }
+
     private val subcommands = mutableListOf<SubCommand>()
 
     private val messageManager = plugin.getManager(MessageManager::class)
@@ -82,8 +93,12 @@ class CmdReports(override val plugin: EternalReports) : OriCommand(plugin, "repo
         return suggestions
     }
 
+    fun getSubCommand(string: String): SubCommand {
+        return subcommands.stream().filter { cmd -> cmd.names.contains(string) }.findFirst().get()
+    }
+
     override fun addSubCommands() {
-        subcommands.addAll(listOf(CmdHelp(plugin, this), CmdMenu(plugin, this), CmdReload(plugin, this), CmdRemove(plugin, this), CmdResolve(plugin, this), CmdToggle(plugin, this)))
+        subcommands.addAll(listOf(CmdHelp(plugin, this), CmdMenu(plugin, this), CmdBook(plugin, this), CmdReload(plugin, this), CmdRemove(plugin, this), CmdResolve(plugin, this), CmdToggle(plugin, this)))
     }
 
     private fun resolvedFormatted(resolved: Boolean): String? {

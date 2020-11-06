@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.util.StringUtil
 import xyz.oribuin.eternalreports.EternalReports
+import xyz.oribuin.eternalreports.command.subcommand.CmdBook
 import xyz.oribuin.eternalreports.data.Report
 import xyz.oribuin.eternalreports.event.PlayerReportEvent
 import xyz.oribuin.eternalreports.manager.ConfigManager
@@ -91,6 +92,11 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
             return
         }
 
+
+        val book = CmdBook(plugin, CmdReports.instance?: return)
+        book.executeArgument(sender, arrayOf("stage1"))
+
+        /*
         // Send the command sender the report message
         msg.sendMessage(sender, "commands.reported-user", placeholders)
 
@@ -115,6 +121,7 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
         if (ConfigManager.Setting.USE_WEBHOOK.boolean) {
             this.createReport(sender, report)
         }
+         */
     }
 
     override fun tabComplete(sender: CommandSender, args: Array<String>): MutableList<String>? {
@@ -141,25 +148,53 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
         try {
 
             val embedColor: Color = try {
-                Color.decode("#FF0000")
+                Color.decode("#B00B1E")
             } catch (ex: NumberFormatException) {
-                Color.WHITE
+                Color.RED
             }
             val embedColorRgb = embedColor.rgb and 0xFFFFFF // Strips alpha channel from the Color#decode
 
             val json = JsonObject()
+
             val embedJson = JsonObject()
-            embedJson.addProperty("title", "Ori's Report Module")
-            embedJson.addProperty("description", ("Welcome to Ori's report module, A player has submitted a report ingame, find information about the report here." +
-                    "\n" +
-                    "\nReport module forked from [EternalReports](https://github.com/Oribuin/EternalReports)"))
+            embedJson.addProperty("title", "Arsentic's Report Module")
+            embedJson.addProperty("description", "Welcome to Ori's report module, A player has submitted a report ingame, find information about the report here.\n\nReport module forked from [EternalReports](https://github.com/Oribuin/EternalReports)")
             embedJson.addProperty("color", embedColorRgb)
 
-            val embedArray = JsonArray()
-            embedArray.add(embedJson)
-            json.add("embeds", embedArray)
+            // Fields
+            val fieldArray = JsonArray()
 
-            val url = URL("https://discordapp.com/api/webhooks/765321095372734484/grFq_QcGOVG4jdNjjRABC7Q-cjVUYB2j52B8DGSIoDiBNafsY1K18SRtXa4gZftW90P2")
+            val firstField = JsonObject()
+            firstField.addProperty("name", "Report Sender")
+            firstField.addProperty("value", "**`${report.sender.name}`**")
+
+            val secondField = JsonObject()
+            secondField.addProperty("name", "Reported User")
+            secondField.addProperty("value", "**`${report.reported.name}`**")
+
+            val thirdField = JsonObject()
+            thirdField.addProperty("name", "Reason")
+            thirdField.addProperty("value", "**`${report.reason}`**")
+
+            val fourthField = JsonObject()
+            fourthField.addProperty("name", "Time")
+            fourthField.addProperty("value", PluginUtils.formatTime(report.time))
+
+            fieldArray.add(firstField)
+            fieldArray.add(secondField)
+            fieldArray.add(thirdField)
+            fieldArray.add(fourthField)
+
+            embedJson.add("fields", fieldArray)
+
+            val embedsJsonArray = JsonArray()
+            embedsJsonArray.add(embedJson)
+            json.add("embeds", embedsJsonArray)
+
+            json.addProperty("content", " ")
+
+
+            val url = URL(plugin.config.getString("webhook-url")?: return)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
 
@@ -169,6 +204,7 @@ class CmdReport(override val plugin: EternalReports) : OriCommand(plugin, "repor
 
             connection.outputStream.use { out ->
                 out.write(json.toString().toByteArray(StandardCharsets.UTF_8))
+                println(json.toString())
                 out.flush()
             }
 
